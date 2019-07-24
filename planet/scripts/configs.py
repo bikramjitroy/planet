@@ -76,15 +76,43 @@ def debug(config, params):
   config.debug = True
   return config
 
+def debug_nips_osim(config, params):
+  with params.unlocked:
+    params.collect_every = 20
+    params.batch_shape = [5, 10]
+    params.train_steps = 30
+    params.test_steps = 30
+    params.max_steps = 100 * (30 * 30)
+    params.collect_every = 20
+    params.num_seed_episodes = 2
+
+  config.osim = True
+  config = default(config, params)
+  config.debug = True
+  return config
+
+def nips_osim(config, params):
+  config.osim = True
+  config = default(config, params)
+  return config
+
+
 
 def _data_processing(config, params):
-  config.batch_shape = params.get('batch_shape', (50, 50))
+  #OSIM BIKRAM
   config.num_chunks = params.get('num_chunks', 1)
-  image_bits = params.get('image_bits', 5)
-  config.preprocess_fn = tools.bind(
-      tools.preprocess.preprocess, bits=image_bits)
-  config.postprocess_fn = tools.bind(
-      tools.preprocess.postprocess, bits=image_bits)
+  if config.osim:
+    config.batch_shape = params.get('batch_shape', (50, 15))
+    config.postprocess_fn = None
+    config.preprocess_fn = None
+  else:
+    config.batch_shape = params.get('batch_shape', (50, 50))
+    image_bits = params.get('image_bits', 5)
+    config.preprocess_fn = tools.bind(
+        tools.preprocess.preprocess, bits=image_bits)
+    config.postprocess_fn = tools.bind(
+        tools.preprocess.postprocess, bits=image_bits)
+
   config.open_loop_context = 5
   config.data_reader = tools.numpy_episodes.episode_reader
   config.data_loader = {
@@ -104,8 +132,11 @@ def _data_processing(config, params):
 
 
 def _model_components(config, params):
-  config.gradient_heads = params.get('gradient_heads', ['image', 'reward'])
-  network = getattr(networks, params.get('network', 'conv_ha'))
+  #OSIM BIKRAM
+  #config.gradient_heads = params.get('gradient_heads', ['image', 'reward'])
+  config.gradient_heads = params.get('gradient_heads', ['state', 'reward'])
+  #network = getattr(networks, params.get('network', 'conv_ha'))
+  network = getattr(networks, params.get('network', 'osim_encoder_decoder'))
   config.activation = ACTIVATIONS[params.get('activation', 'relu')]
   config.num_layers = params.get('num_layers', 3)
   config.num_units = params.get('num_units', 300)
@@ -117,7 +148,8 @@ def _model_components(config, params):
   config.encoder = network.encoder
   config.decoder = network.decoder
   config.heads = tools.AttrDict(_unlocked=True)
-  config.heads.image = config.decoder
+  #config.heads.image = config.decoder
+  config.heads.state = config.decoder
   size = params.get('model_size', 200)
   state_size = params.get('state_size', 30)
   model = params.get('model', 'rssm')
@@ -156,7 +188,8 @@ def _tasks(config, params):
   config.isolate_envs = params.get('isolate_envs', 'thread')
   def common_spaces_ctor(task, action_spaces):
     env = task.env_ctor()
-    env = control.wrappers.SelectObservations(env, ['image'])
+    #env = control.wrappers.SelectObservations(env, ['image'])
+    env = control.wrappers.SelectObservations(env, ['state'])
     env = control.wrappers.PadActions(env, action_spaces)
     return env
   if len(tasks) > 1:

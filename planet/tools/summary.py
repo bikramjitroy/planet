@@ -77,13 +77,15 @@ def data_summaries(data, postprocess_fn, histograms=False, name='data'):
   with tf.variable_scope(name):
     if histograms:
       for key, value in data.items():
-        if key in ('image',):
+        #if key in ('image',):
+        if key in ('state',):
           continue
         summaries.append(tf.summary.histogram(key, data[key]))
-    image = data['image']
-    if postprocess_fn:
-      image = postprocess_fn(image)
-    summaries.append(image_strip_summary.image_strip_summary('image', image))
+    #image = data['image']
+    state = data['state']
+    #if postprocess_fn:
+    #  image = postprocess_fn(image)
+    #summaries.append(image_strip_summary.image_strip_summary('image', image))
   return summaries
 
 
@@ -206,8 +208,9 @@ def prediction_summaries(dists, data, state, name='state'):
       plot_name = '{}_trajectory'.format(key)
       # The control dependencies are needed because rendering in matplotlib
       # uses global state, so rendering two plots in parallel interferes.
-      with tf.control_dependencies(summaries):
-        summaries.append(plot_summary(titles, lines, labels, plot_name))
+      #OSIM BIKRAM
+      #with tf.control_dependencies(summaries):
+      #  summaries.append(plot_summary(titles, lines, labels, plot_name))
       log_probs[key] = log_prob
     log_probs = sorted(log_probs.items(), key=lambda x: x[0])
     titles, lines = zip(*log_probs)
@@ -215,6 +218,7 @@ def prediction_summaries(dists, data, state, name='state'):
     lines = [[line] for line in lines]
     labels = [[None]] * len(titles)
     plot_name = 'logprobs'
-    with tf.control_dependencies(summaries):
-      summaries.append(plot_summary(titles, lines, labels, plot_name))
+    #OSIM BIKRAM
+    #with tf.control_dependencies(summaries):
+    #  summaries.append(plot_summary(titles, lines, labels, plot_name))
   return summaries

@@ -6,5 +6,4 @@ MUJOCO_LOG.TXT
 .vscode/
 err.log
 out.log
-planet/networks/osim_encoder_decoder.py
 

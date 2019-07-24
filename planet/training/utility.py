@@ -282,7 +282,10 @@ def simulate_episodes(
     env = params.task.env_ctor()
     if params.save_episode_dir:
       env = control.wrappers.CollectGymDataset(env, params.save_episode_dir)
-    env = control.wrappers.ConcatObservation(env, ['image'])
+    if config.osim:
+      env = control.wrappers.ConcatObservation(env, ['state'])
+    else:    
+      env = control.wrappers.ConcatObservation(env, ['image'])
     return env
   bind_or_none = lambda x, **kw: x and functools.partial(x, **kw)
   cell = graph.cell

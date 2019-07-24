@@ -55,8 +55,13 @@ class MPCAgent(object):
       return tf.constant('')
 
   def perform(self, agent_indices, observ):
-    observ = self._config.preprocess_fn(observ)
-    embedded = self._config.encoder({'image': observ[:, None]})[:, 0]
+    embedded = self._config.encoder({'state': observ[:, None]})[:, 0]
+    #if self._config.osim:
+    #  embedded = self._config.encoder({'state': observ[:, None]})[:, 0]
+    #else:
+    #  observ = self._config.preprocess_fn(observ)
+    #  embedded = self._config.encoder({'image': observ[:, None]})[:, 0]      
+
     state = nested.map(
         lambda tensor: tf.gather(tensor, agent_indices),
         self._state)

@@ -36,7 +36,9 @@ def simulate(
     gif_summary=True, name='simulate'):
   summaries = []
   with tf.variable_scope(name):
-    return_, image, action, reward, cleanup = collect_rollouts(
+    #OSIM BIKRAM
+    #return_, image, action, reward, cleanup = collect_rollouts(
+    return_, state, action, reward, cleanup = collect_rollouts(
         step=step,
         env_ctor=env_ctor,
         duration=duration,
@@ -49,11 +51,12 @@ def simulate(
       summaries.append(tf.summary.histogram('return_hist', return_))
       summaries.append(tf.summary.histogram('reward_hist', reward))
       summaries.append(tf.summary.histogram('action_hist', action))
-      summaries.append(tools.image_strip_summary(
-          'image', image, max_length=duration))
-    if gif_summary:
-      summaries.append(tools.gif_summary(
-          'animation', image, max_outputs=1, fps=20))
+      #OSIM BIKRAM
+      #summaries.append(tools.image_strip_summary(
+      #    'image', image, max_length=duration))
+    #if gif_summary:
+    #  summaries.append(tools.gif_summary(
+    #      'animation', image, max_outputs=1, fps=20))
   summary = tf.summary.merge(summaries)
   return summary, return_mean, cleanup
 
@@ -70,10 +73,12 @@ def collect_rollouts(
         log=False,
         reset=tf.equal(step, 0))
     with tf.control_dependencies([done, score]):
-      image = batch_env.observ
+      ##OSIM:BIKS
+      #image = batch_env.observ
+      state = batch_env.observ
       batch_action = batch_env.action
       batch_reward = batch_env.reward
-    return done, score, image, batch_action, batch_reward
+    return done, score, state, batch_action, batch_reward
 
   initializer = (
       tf.zeros([num_agents], tf.bool),
@@ -81,14 +86,19 @@ def collect_rollouts(
       0 * batch_env.observ,
       0 * batch_env.action,
       tf.zeros([num_agents], tf.float32))
-  done, score, image, action, reward = tf.scan(
+  #done, score, image, action, reward = tf.scan(
+  done, score, state, action, reward = tf.scan(
       simulate_fn, tf.range(duration),
       initializer, parallel_iterations=1)
   score = tf.boolean_mask(score, done)
-  image = tf.transpose(image, [1, 0, 2, 3, 4])
+
+  ##OSIM:BIKS
+  #image = tf.transpose(image, [1, 0, 2, 3, 4])
+  state = tf.transpose(state, [1, 0, 2])
   action = tf.transpose(action, [1, 0, 2])
   reward = tf.transpose(reward)
-  return score, image, action, reward, cleanup
+  #return score, image, action, reward, cleanup
+  return score, state, action, reward, cleanup
 
 
 def define_batch_env(env_ctor, num_agents, isolate_envs):
