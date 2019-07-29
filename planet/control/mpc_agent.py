@@ -55,6 +55,7 @@ class MPCAgent(object):
       return tf.constant('')
 
   def perform(self, agent_indices, observ):
+    #OSIM BIKRAM
     embedded = self._config.encoder({'state': observ[:, None]})[:, 0]
     #if self._config.osim:
     #  embedded = self._config.encoder({'state': observ[:, None]})[:, 0]

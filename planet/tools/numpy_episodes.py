@@ -133,6 +133,8 @@ def episode_reader(filename, resize=None, max_length=None, action_noise=None):
   episode['return'] = np.cumsum(episode['reward'])
   if max_length:
     episode = {key: value[:max_length] for key, value in episode.items()}
+
+  #OSIM:: NO Need for resize if its state based data  
   if resize and resize != 1:
     factors = (1, resize, resize, 1)
     episode['image'] = interpolation.zoom(episode['image'], factors)
