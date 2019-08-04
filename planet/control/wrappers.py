@@ -475,7 +475,8 @@ class CollectGymDataset(object):
       episode = self._get_episode()
       # info['episode'] = episode
       if self._outdir:
-        filename = self._get_filename()
+        total_reward = int(np.sum(episode["reward"]))
+        filename = self._get_filename(total_reward)
         self._write(episode, filename)
     return observ, reward, done, info
 
@@ -493,10 +494,10 @@ class CollectGymDataset(object):
       observ = {'observ': observ}
     return observ
 
-  def _get_filename(self):
+  def _get_filename(self, total_reward):
     timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
     identifier = str(uuid.uuid4()).replace('-', '')
-    filename = '{}-{}.npz'.format(timestamp, identifier)
+    filename = '{:04d}-{}-{}.npz'.format(total_reward, timestamp, identifier)
     filename = os.path.join(self._outdir, filename)
     return filename
 
